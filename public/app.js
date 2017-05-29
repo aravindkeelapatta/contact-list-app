@@ -1,47 +1,49 @@
 var app = angular.module("myContactApp", []);
 
-app.controller("myContactController", ["$scope", "$http", function($scope,$http) {
 
-    refresh()
+app.controller("myContactController", ["$scope", "$http", "contactFactory", function($scope, $http, contactFactory) {
+
+	getContacts();
+
+	function getContacts() {
+		contactFactory.getContacts()
+		  .then(function(response) {
+		  	console.log(response);
+		  	$scope.contactList = response.data;
+		  })
+	} 
 
 	$scope.createContact = function() {
-		$http.post("/createContact", $scope.contact)
-			.then(function(response) {
-				console.log(response.data)
-				$scope.contact = {};
-				refresh()
-			})
-		}
+		contactFactory.createContact($scope.contact) 
+		  .then(function(response) {
+		  	console.log(response.data)
+		  	getContacts();
+		  	$scope.contact = {};
+		  })
+	}
 
+	$scope.editContact = function(id) {
+		contactFactory.editContact(id)
+		   .then(function(response) {
+		   	console.log(response.data);
+		   	$scope.contact = response.data;
+		   })
+	}
 
-		function refresh() {
-			$http.get("/contacts")
-			 .then(function(response) {
-                console.log(response)
-				$scope.contactList = response.data;
-			})
-		}
+	$scope.updateContact = function() {
+		contactFactory.updateContact($scope.contact._id, $scope.contact)
+		   .then(function(response) {
+		   	console.log(response);
+		   	$scope.contact = {};
+		   	getContacts();
+		   })
+	}
 
-		$scope.editContact = function(id) {
-			$http.get("/getContactById/" +id)
-			 .then(function(response) {
-			 	$scope.contact = response.data;
-			 })
-		}
-
-		$scope.updateContact = function() {
-			$http.put("/updateContact/" +$scope.contact._id, $scope.contact)
-			   .then(function(response) {
-			   	$scope.contact = {};
-			   	  refresh();
-			   })
-		}
-
-		$scope.removeContact = function(id) {
-			$http.delete("/removeContact/" +id)
-			   .then(function(response) {
-			   	refresh();
-			   })
-		}
-
+	$scope.removeContact = function(id) {
+		contactFactory.removeContact(id) 
+           .then(function(response) {
+           	console.log(response.data);
+           	getContacts();
+           })
+	}
 }])
